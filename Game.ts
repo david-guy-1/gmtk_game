@@ -32,5 +32,8 @@ class game {
         this.enemies = this.enemies.filter(x => x[0] > 0);
         
     }
+    sword(x : number, y : number, length : number, width : number){
+        this.enemies = this.enemies.filter(([ex,ey]) =>!((ex >= x && ex <= x+length) && Math.abs(y- ey) <= width) )
+    }
 }
 export default game;

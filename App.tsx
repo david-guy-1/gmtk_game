@@ -10,6 +10,8 @@ import { dist } from './lines';
 let t=0;
 let game_obj : game = new game(); 
 let timedown = 0; 
+
+let swing_sword = 0; 
 function App() {
   const [count, setCount] = useState(0)
   const displayCanvas : MutableRefObject<HTMLCanvasElement | null> = useRef(null);  
@@ -24,6 +26,7 @@ function App() {
         return; 
       } 
       game_obj.tick(); 
+      let t = Date.now();
       c.clearRect(0,0,2000,2000);
       let floor_size = 50; 
       let speed_param = 3;
@@ -39,6 +42,11 @@ function App() {
       // player
       let player_y = 500 - game_obj.y;
       lst.push({type:"drawCircle", "x":20, "y":player_y, "r":10, "fill":true, "color":"black"});
+      //sword
+      if(swing_sword >t - 100){
+        lst.push({"type":"drawRectangle", "tlx":20, "tly":player_y - 15,"brx":120,"bry":player_y + 15, "color":"purple", "fill":true});
+        game_obj.sword(20, 500 - game_obj.y, 100, 30); 
+      }
       //enemies
       for(let item of game_obj.enemies){
         lst.push({type:"drawCircle", "x":item[0], "y":item[1], "r":10, "fill":true, "color":"red"});  
@@ -69,6 +77,20 @@ function App() {
     }; 
     game_obj.jump(h/30 + 20)
   })
+
+  document.addEventListener("keydown", function(e){
+    console.log(e.key);
+    if(game_obj.end){
+      return; 
+    }    
+    let t = Date.now(); 
+    if(e.code =="Space" && t > swing_sword + 1000 ){
+      swing_sword = t; 
+      
+    }
+  })
+
+
   return (
     <>
     Click to jump, avoid enemies
