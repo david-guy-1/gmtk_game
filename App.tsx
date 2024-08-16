@@ -8,7 +8,7 @@ import game from './Game';
 import { dist } from './lines';
 
 let t=0;
-let game_obj : game = new game(); 
+let game_obj : game = new game([-1/10, 500]); 
 let timedown = 0; 
 
 let swing_sword = 0; 
@@ -16,15 +16,18 @@ function App() {
   const [count, setCount] = useState(0)
   const displayCanvas : MutableRefObject<HTMLCanvasElement | null> = useRef(null);  
   setInterval(function(){
-    if(game_obj.end){
-      return; 
-    }
-
     if(displayCanvas.current){
       let c = displayCanvas.current.getContext("2d");
       if(!c){
         return; 
       } 
+      // ended?
+      if(game_obj.end){
+        c.clearRect(0,0,2000,2000);
+        let lst : draw_command[]=[{type:"drawText", "x" : 100, "y":100, "text_":"You got hit by an enemy, you lose! Click to restart", "color":"red", "size":20}];
+        draw(lst, c); 
+        return;
+      }
       game_obj.tick(); 
       let t = Date.now();
       c.clearRect(0,0,2000,2000);
@@ -40,19 +43,26 @@ function App() {
         lst.push(rectangle);
       }
       // player
-      let player_y = 500 - game_obj.y;
-      lst.push({type:"drawCircle", "x":20, "y":player_y, "r":10, "fill":true, "color":"black"});
+      lst.push({type:"drawCircle", "x":20, "y":game_obj.y, "r":10, "fill":true, "color":"black"});
       //sword
       if(swing_sword >t - 100){
-        lst.push({"type":"drawRectangle", "tlx":20, "tly":player_y - 15,"brx":120,"bry":player_y + 15, "color":"purple", "fill":true});
-        game_obj.sword(20, 500 - game_obj.y, 100, 30); 
+        lst.push({"type":"drawRectangle", "tlx":20, "tly":game_obj.y - 15,"brx":120,"bry":game_obj.y + 15, "color":"purple", "fill":true});
+        game_obj.sword(20, game_obj.y, 100, 30); 
       }
       //enemies
       for(let item of game_obj.enemies){
         lst.push({type:"drawCircle", "x":item[0], "y":item[1], "r":10, "fill":true, "color":"red"});  
-        if(dist([20, player_y ], item) < 20){
+        if(dist([20, game_obj.y ], item) < 20){
           game_obj.end = true; 
-          lst=[{type:"drawText", "x" : 100, "y":100, "text_":"You got hit by an enemy, you lose! Click to restart", "color":"red", "size":20}];
+          break;
+        }
+      }
+      // boulders
+      for(let item of game_obj.boulders){
+        let [x,y] = item[0];
+        lst.push({type:"drawCircle", "x":x, "y":y, "r":10, "fill":true, "color":"green"});  
+        if(dist([20, game_obj.y ], item[0]) < 20){
+          game_obj.end = true; 
           break;
         }
       }
@@ -68,14 +78,14 @@ function App() {
   })
   document.addEventListener("mouseup", function(){
     if(game_obj.end){
-      game_obj = new game(); 
+      game_obj = new game([-1/10, 500]); 
     }
     let h = Date.now() - timedown;
     console.log(h); 
     if(h > 400) { 
       h  = 400
     }; 
-    game_obj.jump(h/30 + 20)
+    game_obj.jump(-(h/30 + 20))
   })
 
   document.addEventListener("keydown", function(e){
